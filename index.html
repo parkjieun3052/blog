@@ -1,0 +1,26 @@
+# 블로그만들기
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBlog</title>
+</head>
+<body>
+    <header>
+        <h1 style="color: olivedrab;">my blog</h1>
+        <!-- 1. 메뉴가 표시될 자리 -->
+        <div id="menu-container"></div>
+
+        <!-- 2. 메뉴를 불러오는 스크립트 -->
+        <script>
+            fetch('menu.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('menu-container').innerHTML = data;
+            });
+        </script>
+
+    </header>
+</body>
+</html>
