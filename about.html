@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>블로그 소개</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>블로그 소개</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1 style="color: olivedrab;">블로그를 소개합니다~!</h1>
-        <button><a href="index.html">home</a></button>
-    </header>
-    <p>이 블로그는 ...</p>
+  <header class="site-header">
+    <div class="brand-row">
+      <div class="brand">my <span>blog</span></div>
+    </div>
+    <div id="menu-container" class="menu"></div>
+  </header>
+
+  <main class="page-shell editorial-page" id="aboutPageContent"></main>
+
+  <script src="script.js"></script>
 </body>
 </html>

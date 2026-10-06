@@ -1,21 +1,55 @@
-<!--글쓰기는 블로그 주인만 쓸 수 있습니다-->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>글쓰기</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>글쓰기</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1 style="color: olivedrab;">글쓰기</h1>
-        <button><a href="index.html">home</a></button>
-    </header>
-    <input type="text" placeholder ="제목을 입력하세요">
-    <!-- 이미지도 추가할 수 있도록-->
-    <textarea rows="5" cols="50" placeholder="내용을 입력하세요"></textarea>
-    <input type="file" accept="image/*">
-    <!-- 글쓰기 버튼을 누르면 글이 저장되도록 -->
-    <button>저장하기</button>
+  <header class="site-header">
+    <div class="brand-row">
+      <div class="brand">my <span>blog</span></div>
+    </div>
+    <div id="menu-container" class="menu"></div>
+  </header>
+
+  <main class="page-shell">
+    <h1 class="page-title">새 글 작성</h1>
+
+    <section class="form-panel">
+      <form id="postForm" class="form-stack">
+        <input id="postId" type="hidden" />
+
+        <div class="form-row">
+          <label class="form-label" for="postTitle">제목</label>
+          <input id="postTitle" class="text-input" type="text" placeholder="제목을 입력하세요" />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="postCategory">카테고리</label>
+          <input id="postCategory" class="text-input" type="text" placeholder="예: 여행, 일상, 기록" />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="postContent">내용</label>
+          <textarea id="postContent" class="textarea-input" placeholder="오늘의 이야기를 작성해 주세요."></textarea>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="postImage">대표 이미지</label>
+          <input id="postImage" class="file-input" type="file" accept="image/*" />
+        </div>
+
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">저장하기</button>
+          <button class="secondary-btn" type="button" onclick="location.href='view.html'">글 목록</button>
+          <span id="saveStatus" class="status-text" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>

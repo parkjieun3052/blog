@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>블로그 설정</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-row">
+      <div class="brand">my <span>blog</span></div>
+    </div>
+    <div id="menu-container" class="menu"></div>
+  </header>
+
+  <main class="page-shell">
+    <h1 class="page-title">블로그 설정</h1>
+
+    <section class="form-panel">
+      <div id="adminGate" class="form-stack">
+        <div class="form-row">
+          <label class="form-label" for="adminPassword">관리자 비밀번호</label>
+          <input id="adminPassword" class="text-input" type="password" placeholder="비밀번호를 입력하세요" />
+        </div>
+        <div class="form-actions">
+          <button id="adminLoginBtn" class="primary-btn" type="button">관리자 로그인</button>
+          <span id="adminMessage" class="status-text" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div id="adminSettings" style="display: none;" class="form-stack">
+        <details class="collapsible-panel" open>
+          <summary>홈 배경 / 비밀번호</summary>
+          <div class="collapsible-body">
+            <div class="form-row">
+              <label class="form-label" for="bgFileInput">홈 배경 이미지 파일</label>
+              <input id="bgFileInput" class="file-input" type="file" accept="image/*" />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="newAdminPassword">관리자 비밀번호 변경</label>
+              <input id="newAdminPassword" class="text-input" type="password" placeholder="새 비밀번호를 입력하세요" />
+            </div>
+
+            <div class="form-actions">
+              <button id="bgApplyBtn" class="primary-btn" type="button">배경 저장</button>
+              <button id="passwordChangeBtn" class="secondary-btn" type="button">비밀번호 변경</button>
+              <button id="adminLogoutBtn" class="secondary-btn" type="button">로그아웃</button>
+            </div>
+
+            <div id="settingsMessage" class="status-text" aria-live="polite"></div>
+          </div>
+        </details>
+
+        <details class="collapsible-panel">
+          <summary>블로그 소개 수정</summary>
+          <div class="collapsible-body">
+            <form id="aboutEditorForm" class="form-stack">
+              <div class="form-row">
+                <label class="form-label" for="aboutTitleInput">소개 제목</label>
+                <input id="aboutTitleInput" class="text-input" type="text" placeholder="예: 나의 하루를 사진으로 남기는 공간" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="aboutIntroInput">한 줄 소개</label>
+                <textarea id="aboutIntroInput" class="textarea-input" placeholder="예: 이 블로그는 내가 좋아하는 순간을 사진과 글로 남기는 공간입니다."></textarea>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="aboutMainImageInput">메인 사진</label>
+                <input id="aboutMainImageInput" class="file-input" type="file" accept="image/*" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="aboutSecondaryImageInput">보조 사진</label>
+                <input id="aboutSecondaryImageInput" class="file-input" type="file" accept="image/*" />
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-btn" type="submit">소개 저장</button>
+                <span id="aboutStatus" class="status-text" aria-live="polite"></span>
+              </div>
+            </form>
+          </div>
+        </details>
+
+        <details class="collapsible-panel">
+          <summary>글쓰기 / 수정하기</summary>
+          <div class="collapsible-body">
+            <form id="postForm" class="form-stack">
+              <input id="postId" type="hidden" />
+
+              <div class="form-row">
+                <label class="form-label" for="postTitle">제목</label>
+                <input id="postTitle" class="text-input" type="text" placeholder="제목을 입력하세요" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">카테고리</label>
+                <div id="categoryOptions" class="category-picker" aria-label="카테고리 선택"></div>
+                <input id="postCategory" type="hidden" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">글쓰기 방식</label>
+                <div class="toggle-row">
+                  <button id="toggleHandwriteMode" class="secondary-btn" type="button">손글씨 메모 모드</button>
+                  <span class="hint-text">사진 스크랩과 손글씨 메모를 함께 남겨 보세요.</span>
+                </div>
+              </div>
+
+              <div id="handwritePanel" class="handwrite-panel" style="display: none;">
+                <div class="handwrite-toolbar">
+                  <div class="color-picker" aria-label="펜 색상">
+                    <button class="color-swatch active" type="button" data-color="#2f1d1a" style="--swatch:#2f1d1a" aria-label="갈색 펜"></button>
+                    <button class="color-swatch" type="button" data-color="#d45a5a" style="--swatch:#d45a5a" aria-label="레드 펜"></button>
+                    <button class="color-swatch" type="button" data-color="#5377a7" style="--swatch:#5377a7" aria-label="블루 펜"></button>
+                    <button class="color-swatch" type="button" data-color="#6a9b78" style="--swatch:#6a9b78" aria-label="그린 펜"></button>
+                    <button class="color-swatch" type="button" data-color="#d9a44d" style="--swatch:#d9a44d" aria-label="옐로 펜"></button>
+                  </div>
+                  <button id="eraserToolBtn" class="secondary-btn" type="button">지우개</button>
+                  <div class="sticker-row" aria-label="스티커">
+                    <button class="sticker-btn" type="button" data-sticker="★">★</button>
+                    <button class="sticker-btn" type="button" data-sticker="♥">♥</button>
+                    <button class="sticker-btn" type="button" data-sticker="✦">✦</button>
+                    <button class="sticker-btn" type="button" data-sticker="☀">☀</button>
+                  </div>
+                </div>
+                <canvas id="handwriteCanvas" width="760" height="320" aria-label="손글씨 영역"></canvas>
+                <div class="form-actions">
+                  <button id="clearHandwriteBtn" class="secondary-btn" type="button">초기화</button>
+                  <button id="saveHandwriteBtn" class="secondary-btn" type="button">손글씨 저장</button>
+                </div>
+                <input id="postSketch" type="hidden" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="postContent">내용</label>
+                <textarea id="postContent" class="textarea-input" placeholder="오늘의 이야기를 작성해 주세요."></textarea>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="scrapbookImage">사진 스크랩</label>
+                <input id="scrapbookImage" class="file-input" type="file" accept="image/*" />
+              </div>
+
+              <div class="form-row">
+                <label class="form-label" for="postImage">대표 이미지</label>
+                <input id="postImage" class="file-input" type="file" accept="image/*" />
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-btn" type="submit">저장하기</button>
+                <span id="saveStatus" class="status-text" aria-live="polite"></span>
+              </div>
+            </form>
+          </div>
+        </details>
+
+        <details class="collapsible-panel">
+          <summary>내 글 관리</summary>
+          <div class="collapsible-body">
+            <div id="myPostList" class="admin-post-list"></div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

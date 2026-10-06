@@ -1,15 +1,30 @@
-<!--블로그 글 보는 페이지-->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>블로그 글 보기</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>블로그 글 보기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1 style="color: olivedrab;">블로그 글 보기</h1>
-        <button><a href="index.html">home</a></button>
-    </header>
+  <header class="site-header">
+    <div class="brand-row">
+      <div class="brand">my <span>blog</span></div>
+    </div>
+    <div id="menu-container" class="menu"></div>
+  </header>
+
+  <main class="page-shell">
+    <h1 class="page-title">글 보기</h1>
+    <div class="category-nav-wrap">
+      <div id="categoryFilters" class="category-filters" aria-label="카테고리 필터"></div>
+    </div>
+    <div id="postList" class="posts-board" aria-live="polite"></div>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
