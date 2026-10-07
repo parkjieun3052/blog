@@ -259,33 +259,278 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHomePostSection();
   }
 
+  const commentForm = document.getElementById('commentForm');
+  const commentList = document.getElementById('commentList');
+  const commentAuthorInput = document.getElementById('commentAuthor');
+  const commentPasswordInput = document.getElementById('commentPassword');
+  const commentMessageInput = document.getElementById('commentMessage');
+
+  const getComments = () => {
+    try {
+      return JSON.parse(localStorage.getItem('blogComments') || '[]');
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const openCommentDialog = ({ title, placeholder = '', defaultValue = '', type = 'text', confirmText = '확인' }) => {
+    return new Promise((resolve) => {
+      const existing = document.querySelector('.comment-dialog-overlay');
+      if (existing) {
+        existing.remove();
+      }
+
+      const overlay = document.createElement('div');
+      overlay.className = 'comment-dialog-overlay';
+
+      const dialog = document.createElement('div');
+      dialog.className = 'comment-dialog';
+
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+
+      const input = document.createElement(type === 'textarea' ? 'textarea' : 'input');
+      input.className = 'comment-dialog-input';
+      input.placeholder = placeholder;
+      input.value = defaultValue;
+      if (type !== 'textarea') {
+        input.type = type;
+      }
+      if (type === 'textarea') {
+        input.rows = 4;
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'comment-dialog-actions';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'comment-dialog-cancel';
+      cancelBtn.textContent = '취소';
+
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type = 'button';
+      confirmBtn.className = 'comment-dialog-confirm';
+      confirmBtn.textContent = confirmText;
+
+      cancelBtn.addEventListener('click', () => {
+        overlay.remove();
+        resolve(null);
+      });
+
+      confirmBtn.addEventListener('click', () => {
+        const value = type === 'textarea' ? input.value : input.value;
+        overlay.remove();
+        resolve(value);
+      });
+
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+          overlay.remove();
+          resolve(null);
+        }
+      });
+
+      actions.append(cancelBtn, confirmBtn);
+      dialog.append(heading, input, actions);
+      overlay.append(dialog);
+      document.body.appendChild(overlay);
+
+      setTimeout(() => {
+        input.focus();
+        if (type !== 'textarea' && input.value) {
+          input.select();
+        }
+      }, 0);
+    });
+  };
+
+  const formatCommentTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+
+    if (diffMinutes < 1) {
+      return '방금 전';
+    }
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes}분 전`;
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) {
+      return `${diffHours}시간 전`;
+    }
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const renderComments = () => {
+    if (!commentList) {
+      return;
+    }
+
+    const comments = getComments();
+
+    if (!comments.length) {
+      commentList.innerHTML = '<div class="comment-empty">아직 남겨진 댓글이 없어요. 첫 번째 댓글을 남겨보세요.</div>';
+      return;
+    }
+
+    commentList.innerHTML = comments
+      .map((comment) => `
+        <article class="comment-item">
+          <div class="comment-meta">
+            <div class="comment-author-wrap">
+              <span class="comment-author">${escapeHtml(comment.author || '익명')}</span>
+              <span class="comment-date">${formatCommentTime(comment.createdAt)}</span>
+            </div>
+            <div class="comment-actions">
+              <button type="button" class="comment-action edit" data-comment-id="${comment.id}">수정</button>
+              <button type="button" class="comment-action delete" data-comment-id="${comment.id}">삭제</button>
+            </div>
+          </div>
+          <p>${escapeHtml(comment.message || '').replace(/\n/g, '<br>')}</p>
+        </article>
+      `)
+      .join('');
+
+    commentList.querySelectorAll('.comment-action.delete').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const targetId = Number(button.dataset.commentId);
+        const comments = getComments();
+        const target = comments.find((comment) => Number(comment.id) === targetId);
+
+        if (!target) {
+          return;
+        }
+
+        const password = await openCommentDialog({
+          title: '댓글 비밀번호를 입력해 주세요.',
+          placeholder: '비밀번호',
+          type: 'password'
+        });
+
+        if (password === null) {
+          return;
+        }
+
+        if (String(password) !== String(target.password ?? '')) {
+          window.alert('비밀번호가 올바르지 않습니다.');
+          return;
+        }
+
+        const nextComments = comments.filter((comment) => Number(comment.id) !== targetId);
+        localStorage.setItem('blogComments', JSON.stringify(nextComments));
+        renderComments();
+      });
+    });
+
+    commentList.querySelectorAll('.comment-action.edit').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const targetId = Number(button.dataset.commentId);
+        const comments = getComments();
+        const target = comments.find((comment) => Number(comment.id) === targetId);
+
+        if (!target) {
+          return;
+        }
+
+        const password = await openCommentDialog({
+          title: '댓글 비밀번호를 입력해 주세요.',
+          placeholder: '비밀번호',
+          type: 'password'
+        });
+
+        if (password === null) {
+          return;
+        }
+
+        if (String(password) !== String(target.password ?? '')) {
+          window.alert('비밀번호가 올바르지 않습니다.');
+          return;
+        }
+
+        const nextMessage = await openCommentDialog({
+          title: '댓글 내용을 수정해 주세요.',
+          placeholder: '댓글 내용을 입력해 주세요.',
+          defaultValue: target.message || '',
+          type: 'textarea',
+          confirmText: '수정 완료'
+        });
+
+        if (nextMessage === null) {
+          return;
+        }
+
+        const trimmed = String(nextMessage).trim();
+        if (!trimmed) {
+          window.alert('댓글 내용을 입력해 주세요.');
+          return;
+        }
+
+        const nextComments = comments.map((comment) => {
+          if (Number(comment.id) === targetId) {
+            return { ...comment, message: trimmed, updatedAt: new Date().toISOString() };
+          }
+          return comment;
+        });
+
+        localStorage.setItem('blogComments', JSON.stringify(nextComments));
+        renderComments();
+      });
+    });
+  };
+
+  if (commentForm) {
+    renderComments();
+
+    commentForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const author = commentAuthorInput ? commentAuthorInput.value.trim() || '익명' : '익명';
+      const password = commentPasswordInput ? commentPasswordInput.value.trim() : '';
+      const message = commentMessageInput ? commentMessageInput.value.trim() : '';
+
+      if (!author || !message) {
+        window.alert('닉네임과 댓글 내용을 모두 입력해 주세요.');
+        return;
+      }
+
+      if (!password) {
+        window.alert('수정/삭제용 비밀번호를 입력해 주세요.');
+        return;
+      }
+
+      const nextComment = {
+        id: Date.now(),
+        author,
+        password,
+        message,
+        createdAt: new Date().toISOString()
+      };
+
+      const comments = getComments();
+      comments.unshift(nextComment);
+      localStorage.setItem('blogComments', JSON.stringify(comments));
+      commentForm.reset();
+      renderComments();
+    });
+  }
+
   const aboutPage = document.getElementById('aboutPageContent');
   if (aboutPage) {
     renderAboutPage();
   }
 
-  const aboutHomePreview = document.getElementById('aboutHomePreview');
-  if (aboutHomePreview) {
-    const settings = getAboutSettings();
-    const title = escapeHtml(settings.title || '나의 하루를 사진으로 남기는 공간');
-    const intro = formatMultilineText(settings.intro || '');
-    const mainImage = settings.mainImage || 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80';
-    const secondaryImage = settings.secondaryImage || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80';
-
-    aboutHomePreview.innerHTML = `
-      <div class="about-preview-shell">
-        <div class="about-preview-copy">
-          <div class="about-preview-kicker">Creative Studio</div>
-          <h3>${title}</h3>
-          <p>${intro}</p>
-        </div>
-        <div class="about-preview-gallery">
-          <img src="${mainImage}" alt="${title}" />
-          <img src="${secondaryImage}" alt="${title} 보조 이미지" />
-        </div>
-      </div>
-    `;
-  }
+  renderAboutHomePreview();
 
   const aboutEditorForm = document.getElementById('aboutEditorForm');
   if (aboutEditorForm) {
@@ -321,6 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (saveStatus) {
         saveStatus.textContent = '블로그 소개가 저장되었습니다.';
+      }
+
+      if (typeof renderAboutHomePreview === 'function') {
+        renderAboutHomePreview();
       }
 
       if (typeof renderAboutPage === 'function') {
@@ -904,9 +1153,10 @@ function getPosts() {
 
 function getAboutSettings() {
   const defaults = {
-    title: '나의 하루를 사진으로 남기는 공간',
-    intro: '이 블로그는 내가 좋아하는 순간을 사진과 글로 남기는 작은 기록장입니다.',
-    body: '여행, 일상, 감정이 머무는 장소를 천천히 바라보며 남기는 기록입니다. 매일의 작은 풍경도 기억으로 남기고 싶어서, 사진과 글을 함께 정리하는 공간을 만들었습니다.',
+    title: '나는 어떤 사람일까?',
+    subtitle: '나를 찾아가는 기록',
+    intro: '아직 내가 무엇을 좋아하는지,\n무엇을 하고 싶은지 정확히 알지 못합니다.\n그래서 기록하기로 했습니다.\n내가 배우는 것, 만드는 것, 좋아하는 것,\n그리고 마음이 가는 것들을\n하나씩 모아보려고 합니다.',
+    body: '나는 아직 나에 대해 잘 모릅니다.\n하고 싶은 것도 많고, 궁금한 것도 많지만\n그것들이 정말 내가 좋아하는 것인지\n무엇을 하고 싶은 것인지\n확신하기는 어렵습니다.\n그래서 이 블로그를 만들었습니다.\n새로운 것을 배우고, 직접 만들어보고,\n좋아하는 것을 기록하고, 때로는 실패하면서\n내가 어떤 사람인지 조금씩 알아가려고 합니다.\n지금은 답을 찾은 것이 아니라\n답을 찾아가는 과정에 있습니다.',
     mainImage: 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80',
     secondaryImage: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80'
   };
@@ -919,9 +1169,9 @@ function getAboutSettings() {
   }
 }
 
-function renderAboutPage() {
-  const root = document.getElementById('aboutPageContent');
-  if (!root) {
+function renderAboutHomePreview() {
+  const aboutHomePreview = document.getElementById('aboutHomePreview');
+  if (!aboutHomePreview) {
     return;
   }
 
@@ -931,33 +1181,88 @@ function renderAboutPage() {
   const mainImage = settings.mainImage || 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80';
   const secondaryImage = settings.secondaryImage || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80';
 
-  root.innerHTML = `
-    <header class="editorial-header">
-      <div class="brand-wrap">
-        <span class="studio-brand">Creative Studio</span>
+  aboutHomePreview.innerHTML = `
+    <div class="about-preview-shell">
+      <div class="about-preview-copy">
+        <div class="about-preview-header">
+          <span class="about-preview-kicker">ORDINARY ARCHIVE</span>
+          <span class="about-preview-tag">BLOG</span>
+        </div>
+        <h3>${title}</h3>
+        <div class="about-preview-divider" aria-hidden="true"></div>
+        <p>${intro}</p>
       </div>
-    </header>
-
-    <div class="editorial-body">
-      <div class="editorial-title-wrap">
-        <div class="title-arrow">→</div>
-        <h1 class="editorial-title">${title}</h1>
-      </div>
-
-      <div class="editorial-copy editorial-copy-simple">
-        <p class="about-intro-text">${intro}</p>
-      </div>
-
-      <div class="editorial-gallery editorial-gallery-simple">
-        <figure class="photo-card photo-large">
-          <img src="${mainImage}" alt="${title}" />
-        </figure>
-
-        <figure class="photo-card photo-portrait">
-          <img src="${secondaryImage}" alt="${title} 보조 이미지" />
-        </figure>
+      <div class="about-preview-gallery">
+        <img src="${mainImage}" alt="${title}" />
+        <img src="${secondaryImage}" alt="${title} 보조 이미지" />
       </div>
     </div>
+  `;
+}
+
+function renderAboutPage() {
+  const root = document.getElementById('aboutPageContent');
+  if (!root) {
+    return;
+  }
+
+  const settings = getAboutSettings();
+  const title = escapeHtml(settings.title || '나는 어떤 사람일까?');
+  const subtitle = escapeHtml(settings.subtitle || '나를 찾아가는 기록');
+  const intro = formatMultilineText(settings.intro || '');
+  const bodyText = formatMultilineText(settings.body || '나는 아직 나에 대해 잘 모릅니다.\n하고 싶은 것도 많고, 궁금한 것도 많지만\n그것들이 정말 내가 좋아하는 것인지\n무엇을 하고 싶은 것인지\n확신하기는 어렵습니다.\n그래서 이 블로그를 만들었습니다.\n새로운 것을 배우고, 직접 만들어보고,\n좋아하는 것을 기록하고, 때로는 실패하면서\n내가 어떤 사람인지 조금씩 알아가려고 합니다.\n지금은 답을 찾은 것이 아니라\n답을 찾아가는 과정에 있습니다.');
+  const mainImage = settings.mainImage || 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80';
+  const secondaryImage = settings.secondaryImage || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80';
+
+  root.innerHTML = `
+    <article class="archive-journal">
+      <header class="archive-header-row">
+        <span class="archive-label">ORDINARY ARCHIVE</span>
+        <span class="archive-blog">BLOG</span>
+      </header>
+
+      <section class="archive-hero">
+        <div class="hero-title-wrap">
+          <h1 class="hero-title">${title}</h1>
+        </div>
+
+        <div class="hero-intro-block">
+          <p>${intro}</p>
+        </div>
+      </section>
+
+      <figure class="hero-photo-wrap">
+        <img src="${mainImage}" alt="${title}" />
+      </figure>
+
+      <section class="archive-story">
+        <div class="story-aside">
+          <div class="archive-inline-label">ORDINARY ARCHIVE</div>
+          <p>평범한 하루들이 모여, <br>특별한 이야기와<br>남겨질 수 있기를.</p>
+        </div>
+
+        <figure class="mini-photo-box">
+          <img src="${secondaryImage}" alt="${subtitle}" />
+        </figure>
+
+        <div class="story-copy">
+          <h2>${subtitle}</h2>
+          <p>${bodyText}</p>
+        </div>
+      </section>
+
+      <section class="archive-bottom">
+        <div class="signature-wrap">
+          <div class="signature-mark" aria-hidden="true"></div>
+          <p>아직 잘 모르겠습니다.<br>그래서 기록해보려고 합니다.</p>
+        </div>
+
+        <div class="mini-gallery">
+          <img src="${secondaryImage}" alt="보조 이미지 1" />
+          <img src="${mainImage}" alt="보조 이미지 2" />
+        </div>
+      </section>
+    </article>
   `;
 }
 

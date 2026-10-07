@@ -50,22 +50,34 @@
       <div id="latestPosts" class="featured-grid"></div>
     </section>
 
-    <section class="info-grid">
-      <div class="info-panel">
-        <h2>이 블로그의 기본 구성</h2>
-        <p>이 블로그는 간단한 개인 기록용 블로그 구조로 시작했고, 앞으로 취향에 맞게 더 확장할 수 있도록 설계했습니다.</p>
-        <ul>
-          <li>홈 화면에서 분위기 있는 배경 이미지 설정 가능</li>
-          <li>메뉴로 Home, About, View, Write 페이지 구성</li>
-          <li>글쓰기 페이지에서 제목, 내용, 이미지 업로드 후 저장 가능</li>
-          <li>저장한 글은 글 보기 페이지에서 바로 확인 가능</li>
-        </ul>
+    <section id="comments" class="content-section comment-section" aria-label="Blog comments">
+      <div class="section-head">
+        <h2>Comments</h2>
       </div>
 
-      <aside class="side-box">
-        <h3>블로그 추천 포인트</h3>
-        <p>처음에는 간단하지만, 점점 카테고리, 태그, 검색, 댓글 기능을 추가하면서 나만의 스타일을 만들 수 있습니다.</p>
-      </aside>
+      <div class="comment-panel">
+        <div id="commentList" class="comment-list" aria-live="polite"></div>
+
+        <form id="commentForm" class="comment-form">
+          <div class="comment-inputs">
+            <label class="field-group">
+              <span>닉네임</span>
+              <input id="commentAuthor" type="text" maxlength="20" placeholder="닉네임을 입력해 주세요" aria-label="닉네임" />
+            </label>
+            <label class="field-group">
+              <span>비밀번호</span>
+              <input id="commentPassword" type="password" maxlength="20" placeholder="수정/삭제용 비밀번호" aria-label="비밀번호" />
+            </label>
+          </div>
+          <label class="field-group comment-field">
+            <span>댓글</span>
+            <textarea id="commentMessage" rows="4" maxlength="300" placeholder="이 블로그에 남기고 싶은 말을 적어주세요." aria-label="댓글 내용"></textarea>
+          </label>
+          <div class="comment-submit-wrap">
+            <button type="submit" class="comment-submit">댓글 남기기</button>
+          </div>
+        </form>
+      </div>
     </section>
   </main>
 
