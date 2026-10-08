@@ -4,19 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>블로그 글 보기</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- ===== 상단 헤더 / 메뉴 ===== -->
   <header class="site-header">
     <div class="brand-row">
-      <div class="brand">my <span>blog</span></div>
+      <div class="brand" aria-label="블로그 이름">
+        <span class="brand-main">ORDINARY</span>
+        <span class="brand-sub">archive</span>
+      </div>
     </div>
     <div id="menu-container" class="menu"></div>
   </header>
 
+  <!-- ===== 글 목록 / 카테고리 필터 영역 ===== -->
   <main class="page-shell">
     <h1 class="page-title">글 보기</h1>
     <div class="category-nav-wrap">
@@ -25,6 +27,7 @@
     <div id="postList" class="posts-board" aria-live="polite"></div>
   </main>
 
+  <!-- ===== 자바스크립트 연결 ===== -->
   <script src="script.js"></script>
 </body>
 </html>

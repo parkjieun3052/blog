@@ -4,19 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>블로그 설정</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- ===== 상단 헤더 / 메뉴 ===== -->
   <header class="site-header">
     <div class="brand-row">
-      <div class="brand">my <span>blog</span></div>
+      <div class="brand" aria-label="블로그 이름">
+        <span class="brand-main">ORDINARY</span>
+        <span class="brand-sub">archive</span>
+      </div>
     </div>
     <div id="menu-container" class="menu"></div>
   </header>
 
+  <!-- ===== 관리자 설정 페이지 ===== -->
   <main class="page-shell">
     <h1 class="page-title">블로그 설정</h1>
 
@@ -149,8 +151,10 @@
               </div>
 
               <div class="form-row">
-                <label class="form-label" for="postImage">대표 이미지</label>
-                <input id="postImage" class="file-input" type="file" accept="image/*" />
+                <label class="form-label" for="postGalleryFiles">사진 첨부</label>
+                <input id="postGalleryFiles" class="file-input" type="file" accept="image/*" multiple />
+                <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
+                <input id="postCoverImage" type="hidden" />
               </div>
 
               <div class="form-actions">
@@ -171,6 +175,7 @@
     </section>
   </main>
 
+  <!-- ===== 자바스크립트 연결 ===== -->
   <script src="script.js"></script>
 </body>
 </html>

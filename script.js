@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ===== 공통 초기화 =====
+  // 페이지 타입에 따라 설정 페이지 여부를 판별하고, 전역 상태를 초기화합니다.
   const isSettingsPage = window.location.pathname.toLowerCase().endsWith('settings.html');
   document.body.classList.toggle('is-settings-page', isSettingsPage);
   document.body.classList.toggle('is-scroll-page', !isSettingsPage);
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
+  // ===== 기본값 설정 =====
+  // 홈 배경 이미지와 관리자 비밀번호는 여기 값을 수정하면 기본값이 바뀝니다.
   const defaultImage = 'https://images.unsplash.com/photo-1493246507139-91e8ccbcc934?auto=format&fit=crop&w=1600&q=80';
   const defaultAdminPassword = '1234';
 
@@ -77,9 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (hero) {
     const savedImage = localStorage.getItem('blogBgUrl') || defaultImage;
-    hero.style.backgroundImage = `linear-gradient(120deg, rgba(20,25,22,0.75), rgba(53,70,55,0.30)), url("${savedImage}")`;
+    hero.style.backgroundImage = `linear-gradient(120deg, rgba(17,17,17,0.82), rgba(80,80,80,0.25)), url("${savedImage}")`;
   }
 
+  // ===== 관리자 로그인 / 비밀번호 설정 =====
+  // settings.html에서 관리자 로그인, 비밀번호 변경, 홈 배경 저장을 처리합니다.
   const adminGate = document.getElementById('adminGate');
   const adminSettings = document.getElementById('adminSettings');
   const adminPasswordInput = document.getElementById('adminPassword');
@@ -191,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const homeHero = document.querySelector('.hero');
       if (homeHero) {
-        homeHero.style.backgroundImage = `linear-gradient(120deg, rgba(20,25,22,0.75), rgba(53,70,55,0.30)), url("${imageUrl}")`;
+        homeHero.style.backgroundImage = `linear-gradient(120deg, rgba(17,17,17,0.82), rgba(80,80,80,0.25)), url("${imageUrl}")`;
       }
 
       if (settingsMessage) {
@@ -259,6 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHomePostSection();
   }
 
+  // ===== 댓글 기능 =====
+  // 댓글 목록 렌더링, 비밀번호 확인, 수정/삭제 처리 등을 담당합니다.
   const commentForm = document.getElementById('commentForm');
   const commentList = document.getElementById('commentList');
   const commentAuthorInput = document.getElementById('commentAuthor');
@@ -589,8 +597,71 @@ document.addEventListener('DOMContentLoaded', () => {
   const eraserToolBtn = document.getElementById('eraserToolBtn');
   const colorSwatches = document.querySelectorAll('.color-swatch');
   const stickerButtons = document.querySelectorAll('.sticker-btn');
+  const galleryPreview = document.getElementById('galleryPreview');
+  const postGalleryFiles = document.getElementById('postGalleryFiles');
+  const postCoverImage = document.getElementById('postCoverImage');
   let activeImageLayer = null;
   let imageLayers = [];
+  let galleryDraft = [];
+
+  const syncGalleryPreview = () => {
+    if (!galleryPreview) {
+      return;
+    }
+
+    if (!galleryDraft.length) {
+      galleryPreview.innerHTML = '<div class="gallery-empty">첨부된 사진이 없습니다.</div>';
+      return;
+    }
+
+    galleryPreview.innerHTML = galleryDraft
+      .map((item, index) => `
+        <button type="button" class="gallery-item ${item.isCover ? 'selected' : ''}" data-gallery-index="${index}" data-gallery-cover="${encodeURIComponent(item.src)}">
+          <img src="${item.src}" alt="첨부 이미지 ${index + 1}" />
+          <span>${item.isCover ? '대표 사진' : '설정'}</span>
+        </button>
+      `)
+      .join('');
+
+    galleryPreview.querySelectorAll('.gallery-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        const index = Number(button.dataset.galleryIndex);
+        galleryDraft = galleryDraft.map((item, itemIndex) => ({
+          ...item,
+          isCover: itemIndex === index
+        }));
+
+        if (postCoverImage) {
+          postCoverImage.value = galleryDraft[index]?.src || '';
+        }
+
+        syncGalleryPreview();
+      });
+    });
+
+    if (postCoverImage) {
+      const currentCover = galleryDraft.find((item) => item.isCover)?.src || galleryDraft[0]?.src || '';
+      postCoverImage.value = currentCover;
+    }
+  };
+
+  if (postGalleryFiles) {
+    postGalleryFiles.addEventListener('change', async () => {
+      const nextFiles = Array.from(postGalleryFiles.files || []);
+      if (!nextFiles.length) {
+        return;
+      }
+
+      const uploaded = await Promise.all(nextFiles.map((file) => readFileAsDataUrl(file)));
+      const nextGallery = uploaded.map((src) => ({ src, isCover: false }));
+
+      galleryDraft = [...galleryDraft, ...nextGallery];
+      if (!galleryDraft.some((item) => item.isCover)) {
+        galleryDraft[0].isCover = true;
+      }
+      syncGalleryPreview();
+    });
+  }
 
   const exportHandwriteCanvas = async () => {
     if (!handwriteCanvas) {
@@ -949,6 +1020,11 @@ document.addEventListener('DOMContentLoaded', () => {
         titleEl.value = target.title;
         categoryEl.value = target.category || '';
         contentEl.value = target.content;
+        galleryDraft = normalizePostGallery(target);
+        if (postCoverImage) {
+          postCoverImage.value = getPostCoverImage(target) || '';
+        }
+        syncGalleryPreview();
         if (target.handwriting) {
           loadCanvasFromImage(target.handwriting);
         }
@@ -957,6 +1033,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.textContent = '수정하기';
       }
     } else {
+      galleryDraft = [];
+      syncGalleryPreview();
       renderCategoryPicker('일상');
     }
 
@@ -974,7 +1052,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const title = document.getElementById('postTitle').value.trim();
       const category = document.getElementById('postCategory').value.trim() || '일상';
       const content = document.getElementById('postContent').value.trim();
-      const imageInput = document.getElementById('postImage');
       const statusText = document.getElementById('saveStatus');
       const postId = postIdField ? postIdField.value : '';
 
@@ -983,11 +1060,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let image = '';
-      if (imageInput && imageInput.files && imageInput.files[0]) {
-        image = await readFileAsDataUrl(imageInput.files[0]);
+      let galleryToSave = [...galleryDraft];
+      if (postGalleryFiles && postGalleryFiles.files && postGalleryFiles.files.length) {
+        const uploadedImages = await Promise.all(Array.from(postGalleryFiles.files).map((file) => readFileAsDataUrl(file)));
+        galleryToSave = [...galleryToSave, ...uploadedImages.map((src) => ({ src, isCover: false }))];
       }
 
+      const selectedCover = postCoverImage ? (postCoverImage.value || '').trim() : '';
+      if (galleryToSave.length) {
+        if (selectedCover && galleryToSave.some((item) => item.src === selectedCover)) {
+          galleryToSave = galleryToSave.map((item) => ({
+            ...item,
+            isCover: item.src === selectedCover
+          }));
+        } else {
+          galleryToSave = galleryToSave.map((item, index) => ({
+            ...item,
+            isCover: index === 0
+          }));
+          if (postCoverImage) {
+            postCoverImage.value = galleryToSave[0].src;
+          }
+        }
+      }
+
+      const coverImage = galleryToSave.find((item) => item.isCover)?.src || galleryToSave[0]?.src || '';
       let scrapbookImage = '';
       if (scrapbookImageInput && scrapbookImageInput.files && scrapbookImageInput.files[0] && !handwritingNote) {
         scrapbookImage = await readFileAsDataUrl(scrapbookImageInput.files[0]);
@@ -1003,7 +1100,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title,
             category: category || '일상',
             content,
-            image: image || posts[index].image || '',
+            image: coverImage || posts[index].image || '',
+            coverImage: coverImage || posts[index].coverImage || '',
+            images: galleryToSave.map((item) => ({ src: item.src, isCover: item.isCover })),
             scrapbookImage: scrapbookImage || posts[index].scrapbookImage || '',
             handwriting: handwritingNote || posts[index].handwriting || '',
             updatedAt: new Date().toISOString()
@@ -1015,7 +1114,9 @@ document.addEventListener('DOMContentLoaded', () => {
           title,
           category: category || '일상',
           content,
-          image,
+          image: coverImage,
+          coverImage,
+          images: galleryToSave.map((item) => ({ src: item.src, isCover: item.isCover })),
           scrapbookImage,
           handwriting: handwritingNote,
           createdAt: new Date().toISOString()
@@ -1028,6 +1129,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (postIdField) {
         postIdField.value = '';
       }
+      if (postCoverImage) {
+        postCoverImage.value = '';
+      }
+      galleryDraft = [];
+      syncGalleryPreview();
       if (postSketch) {
         postSketch.value = '';
       }
@@ -1145,6 +1251,49 @@ function renderMyPostManager() {
       `;
     })
     .join('');
+}
+
+function normalizePostGallery(post = {}) {
+  if (Array.isArray(post.images) && post.images.length) {
+    return post.images
+      .map((item) => {
+        if (typeof item === 'string') {
+          return { src: item, isCover: item === (post.coverImage || post.image || '') };
+        }
+
+        return {
+          src: item?.src || '',
+          isCover: Boolean(item?.isCover)
+        };
+      })
+      .filter((item) => item.src);
+  }
+
+  const gallery = [];
+  const primaryImage = post.image || post.coverImage || '';
+  if (primaryImage) {
+    gallery.push({ src: primaryImage, isCover: true });
+  }
+
+  const additionalImage = post.scrapbookImage || '';
+  if (additionalImage && additionalImage !== primaryImage) {
+    gallery.push({ src: additionalImage, isCover: false });
+  }
+
+  if (!gallery.length && typeof post.mainImage === 'string') {
+    gallery.push({ src: post.mainImage, isCover: true });
+  }
+
+  if (gallery.length && !gallery.some((item) => item.isCover)) {
+    gallery[0].isCover = true;
+  }
+
+  return gallery;
+}
+
+function getPostCoverImage(post = {}) {
+  const gallery = normalizePostGallery(post);
+  return gallery.find((item) => item.isCover)?.src || gallery[0]?.src || '';
 }
 
 function getPosts() {
@@ -1324,8 +1473,9 @@ function createHomeCardMarkup(post) {
   const safeCategory = escapeHtml(post.category || '일상');
   const safeSummary = escapeHtml(getSummaryText(post.content || ''));
   const dateText = new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-  const image = post.image
-    ? `<div class="card-thumb" style="background-image: url('${post.image}');"></div>`
+  const coverImage = getPostCoverImage(post);
+  const image = coverImage
+    ? `<div class="card-thumb" style="background-image: url('${coverImage}');"></div>`
     : '<div class="card-thumb placeholder" aria-label="사진 영역">Photo</div>';
 
   return `
@@ -1355,8 +1505,9 @@ function renderPostSummary(post) {
     month: 'long',
     day: 'numeric'
   });
-  const safeImage = post.image
-    ? `<div class="post-visual"><img src="${post.image}" alt="${safeTitle}"></div>`
+  const coverImage = getPostCoverImage(post);
+  const safeImage = coverImage
+    ? `<div class="post-visual"><img src="${coverImage}" alt="${safeTitle}"></div>`
     : '<div class="post-visual placeholder" aria-label="사진 영역"><span>Photo</span></div>';
 
   return `
@@ -1384,7 +1535,14 @@ function renderPostDetail(post) {
     month: 'long',
     day: 'numeric'
   });
-  const safeImage = post.image ? `<img src="${post.image}" alt="${safeTitle}">` : '';
+  const gallery = normalizePostGallery(post);
+  const coverImage = getPostCoverImage(post);
+  const safeImage = coverImage ? `<img src="${coverImage}" alt="${safeTitle}">` : '';
+  const galleryMarkup = gallery.length
+    ? `<div class="post-gallery">${gallery
+        .map((item) => `<figure class="post-gallery-item ${item.src === coverImage ? 'cover' : ''}"><img src="${item.src}" alt="${safeTitle} 사진" /></figure>`)
+        .join('')}</div>`
+    : '';
   const handwritingMarkup = post.handwriting
     ? `<div class="note-paper"><img src="${post.handwriting}" alt="손글씨 메모"></div>`
     : '';
@@ -1414,6 +1572,7 @@ function renderPostDetail(post) {
 
       <h2 class="post-title">${safeTitle}</h2>
       ${safeImage}
+      ${galleryMarkup}
       ${noteCollage}
       ${contentMarkup}
     </article>
